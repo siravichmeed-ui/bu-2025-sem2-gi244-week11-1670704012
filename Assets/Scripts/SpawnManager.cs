@@ -3,82 +3,80 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
+    [Header("Spawn Points")]
     public Transform[] spawnPoints;
+
+    [Header("Prefabs")]
     public GameObject enemyPrefab;
-    public Rigidbody box;
-    private Coroutine goodByeRoutine;
+    public GameObject powerUpPrefab;
+
+    [System.Serializable]
+    public class Wave
+    {
+        public int totalSpawnEnemies;
+        public int numberOfRandomSpawnPoint;
+        public float delayStart;
+        public float spawnInterval;
+        public int numberOfPowerUp;
+    }
+
+    [Header("Waves")]
+    public Wave[] waves;
 
     void Start()
     {
         StartCoroutine(SpawnRoutine());
-        // InvokeRepeating(nameof(RandomSpawn), 0, 5f);
-        //StartCoroutine(Hello());
-        //StartCoroutine(Goodbye());
-        //goodByeRoutine = StartCoroutine(Goodbye());
     }
+
     IEnumerator SpawnRoutine()
     {
-        yield return new WaitForSeconds(5);
-        while (true)
+        for (int w = 0; w < waves.Length; w++)
         {
-            RandomSpawn();
-            yield return new WaitForSeconds(3);
+            Wave wave = waves[w];
+
+            Debug.Log("Start Wave " + (w + 1));
+
+            //Spawn PowerUp ก่อนเริ่ม wave
+            for (int i = 0; i < wave.numberOfPowerUp; i++)
+            {
+                SpawnPowerUp();
+            }
+
+           
+            yield return new WaitForSeconds(wave.delayStart);
+
+            
+            for (int i = 0; i < wave.totalSpawnEnemies; i++)
+            {
+                SpawnEnemy(wave.numberOfRandomSpawnPoint);
+                yield return new WaitForSeconds(wave.spawnInterval);
+            }
+
+            
+            yield return new WaitUntil(() => GameObject.FindGameObjectsWithTag("Enemy").Length == 0);
+
+            Debug.Log("End Wave " + (w + 1));
         }
+
+        Debug.Log("All Waves Complete!");
     }
-    void RandomSpawn()
+
+    void SpawnEnemy(int randomPointCount)
     {
-        var index = Random.Range(0, spawnPoints.Length);
-        var spawnPoint = spawnPoints[index];
+        // จำกัดจำนวน spawn point ที่ใช้
+        int max = Mathf.Min(randomPointCount, spawnPoints.Length);
+
+        int index = Random.Range(0, max);
+        Transform spawnPoint = spawnPoints[index];
+
         Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
     }
-    IEnumerator MoveBox()
+
+    void SpawnPowerUp()
     {
-        while (true)
-        {
-            box.linearVelocity = 10 * Vector3.up;
-            yield return new WaitForSeconds(3);
-            box.linearVelocity = 10 * Vector3.right;
-            yield return new WaitForSeconds(3);
-            box.linearVelocity = 10 * Vector3.down;
-            yield return new WaitForSeconds(3);
-            box.linearVelocity = 10 * Vector3.left;
-        }
-    }
-    //private void Update()
-    //{
-    //    if (Time.time > 1)
-    //    {  
-    //        if (goodByeRoutine != null)
-    //        {
-    //            StopCoroutine(goodByeRoutine);
-    //        }
-    //    }
-    //}
-    IEnumerator Goodbye()
-    {
-        while (true)
-        {
-            //yield return new WaitForSeconds(1);
-            Debug.Log("Bye" + Time.frameCount + "" + Time.time);
-            yield return null;
+        int index = Random.Range(0, spawnPoints.Length);
+        Transform spawnPoint = spawnPoints[index];
 
-            //if (Time.time > 5)
-            //{
-
-            //}
-            StartCoroutine(Hello());
-
-        }
-    }
-    IEnumerator Hello()
-    {
-        Debug.Log("Hello" + Time.frameCount);
-        Debug.Log("Hello" + Time.frameCount);
-
-        Debug.Log("Hello" + Time.frameCount);
-
-        yield return null;
-        Debug.Log("Hello" + Time.frameCount);
-        yield return null;
+        Instantiate(powerUpPrefab, spawnPoint.position, Quaternion.identity);
     }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// 1.1 START HERE
+
 public class RotateCamera : MonoBehaviour
 {
     public float rotationSpeed;
